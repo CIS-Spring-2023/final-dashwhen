@@ -1,0 +1,356 @@
+<%- include('../template/head')-%>
+<body class="text-center">
+    <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+        <%- include('../template/nav')-%>
+        <main role="main" class="inner cover">
+            <h1 class="cover-heading">Cargo List</h1>
+            <div id="checkbox-section">
+                <input type="checkbox" id="completed-journey" name="completed-journey">
+                <label for="completed-journey">Hide Delivered Cargo</label>
+            </div>            
+            <div id="table-section">
+                <table class="table w3-text-white">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Cargo Type</th>
+                            <th>Arrival</th>
+                            <th>Departure</th>
+                            <th>Weight</th>
+                            <th>Ship Name</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cargo-table">
+                    </tbody>
+                </table>
+            </div>
+            <div id="select-section">
+                <form id="select-form">
+                    <label for="select">Select an action:</label>
+                    <select id="select" name="select">
+                        <option value="add">Add</option>
+                        <option value="update">Update</option>
+                        <option value="delete">Delete</option>
+                    </select>
+                </form>
+            </div>
+            <div id="add-section" class="container" style="display: none;">
+                <form id="add-form">
+                    <label for="cargotype">Cargo Type:</label>
+                    <input type="text" id="cargotype" name="cargotype" placeholder="Type cargo type here..." required><br><br>
+                    <label for="arrival">Arrival Date:</label>
+                    <input type="date" id="arrival" name="arrival" placeholder="Type arrival date here..." required><br><br>
+                    <label for="departure">Departure Date:</label>
+                    <input type="date" id="departure" name="departure" placeholder="Type departure date here..."><br><br>
+                    <label for="cargoweight">Cargo Weight:</label>
+                    <input type="text" id="cargoweight" name="cargoweight" placeholder="Type cargo weight here..."><br><br>
+                    <label for="shipname">Ship Name:</label>
+                    <input type="text" id="shipname" name="shipname" placeholder="Type spaceship's name here..."><br><br>
+                    <input type="submit" id="submit-btn" value="Add New Entry">
+                </form>                  
+            </div>
+            <div id="update-section" class="container" style="display: none;">
+                <form id="update-form">
+                    <label for="cargotype-update">New Cargo Type:</label>
+                    <input type="text" id="cargotype-update" name="cargotype-update" placeholder="Leave cargo type unchanged..."><br><br>
+                    <label for="arrival-update">New Arrival Date:</label>
+                    <input type="date" id="arrival-update" name="arrival-update" placeholder="Leave arrival date unchanged..."><br><br>
+                    <label for="departuredate-update">New Departure Date:</label>
+                    <input type="date" id="departuredate-update" name="departuredate-update" placeholder="Leave departure date unchanged..."><br><br>
+                    <label for="cargoweight-update">New Cargo Weight:</label>
+                    <input type="text" id="cargoweight-update" name="cargoweight-update" placeholder="Leave cargo weight unchanged..."><br><br>
+                    <label for="shipname-update">Substitute Spaceship Name:</label>
+                    <input type="text" id="shipname-update" name="shipname-update" placeholder="Type substitute spaceship's name here..."><br><br>
+                    <input type="submit" id="submit-btn" value="Update Selected Entries">
+                </form>
+            </div>
+            
+            <div id="delete-section" class="container" style="display: none;">
+                <button id="delete-button">Delete Selected Entries</button>
+            </div>
+        </main>
+        <%- include('../template/footer')-%>
+    </div>
+</body>
+<script>
+    function handleSelectChange() {
+        const select = document.querySelector('select');
+        const addSection = document.querySelector('#add-section');
+        const updateSection = document.querySelector('#update-section');
+        const deleteSection = document.querySelector('#delete-section');
+        const checkboxes = document.querySelectorAll('.hidden');
+        
+        if (select.value === 'add') {
+            addSection.style.display = 'block';
+            updateSection.style.display = 'none';
+            deleteSection.style.display = 'none';
+
+            // Hide all checkboxes
+            checkboxes.forEach(function(checkbox) {
+            checkbox.style.display = 'none';
+            });
+        } else if (select.value === 'update') {
+            addSection.style.display = 'none';
+            updateSection.style.display = 'block';
+            deleteSection.style.display = 'none';
+
+            // Show all checkboxes
+            checkboxes.forEach(function(checkbox) {
+            checkbox.style.display = 'block';
+            });
+        } else if (select.value === 'delete') {
+            addSection.style.display = 'none';
+            updateSection.style.display = 'none';
+            deleteSection.style.display = 'block';
+
+            // Show all checkboxes
+            checkboxes.forEach(function(checkbox) {
+            checkbox.style.display = 'block';
+            });
+        }
+    }
+    
+    function fetchCargo(username, password) {
+        // Reset the cargo table before appending to it
+        const cargoTable = document.getElementById('cargo-table');
+        cargoTable.innerHTML = '';
+
+        // Make a GET request to the server
+        const completedCheckbox = document.getElementById('completed-journey');
+        const showAll = completedCheckbox.checked;
+
+        fetch(`http://localhost:5000/cargo?username=${username}&password=${password}&completedFilter=${showAll}`)
+            .then(response => response.json())
+            .then(data => {
+                // Extract the captain objects from the response
+                const cargoValues = Object.values(data);
+
+                // Dynamically generate the table rows
+                for (const cargo of cargoValues) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><input type="checkbox" class="hidden" id="checkbox${cargo.id}" style="display:none;width:17px;height:17px;"></td>
+                        <td class="cargotype">${cargo.cargotype}</td>
+                        <td class="departure">${cargo.departure.substring(0, cargo.departure.length - 13)}</td>
+                        <td class="arrival">${cargo.arrival.substring(0, cargo.arrival.length - 13)}</td>
+                        <td class="weight">${cargo.weight}</td>
+                        <td class="spaceshipname">${cargo.spaceshipname}</td>
+                    `;
+                    cargoTable.appendChild(row);
+                }
+                handleSelectChange();
+            })
+            .catch(error => console.error(error));
+    }
+
+    window.onload = function() {
+
+        const cookies = document.cookie.split("; ");
+        const usernameCookie = cookies.find(cookie => cookie.startsWith("username="));
+        const passwordCookie = cookies.find(cookie => cookie.startsWith("password="));
+        const username = usernameCookie ? usernameCookie.split("=")[1] : null;
+        const password = passwordCookie ? passwordCookie.split("=")[1] : null;
+
+        if (!username || !password) {
+            window.location.href = "http://localhost:3000/login";
+        }
+
+        const select = document.getElementById('select');
+        const addSection = document.getElementById('add-section');
+        const updateSection = document.getElementById('update-section');
+        const deleteSection = document.getElementById('delete-section');
+        const completedCheckbox = document.getElementById('completed-journey');
+        const form1 = document.getElementById('add-form');
+        const submitBtn = document.getElementById('submit-btn');
+
+        fetchCargo(username, password);
+
+        completedCheckbox.addEventListener('change', () => {
+            fetchCargo(username, password);
+        });
+
+        select.addEventListener('change', handleSelectChange);
+
+
+        select.value = '';
+
+        form1.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const form1Data = {
+            name: form1.shipname.value,
+            weight: form1.cargoweight.value,
+            cargotype: form1.cargotype.value,
+            arrival: form1.arrival.value,
+            departure: form1.departure.value,
+            username: username,
+            password: password
+            };
+
+            for (const key in form1Data) {
+            if (form1Data[key] === '') {
+                delete form1Data[key];
+            }
+            }
+
+            fetch('http://localhost:5000/cargo', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(form1Data)
+            }).then(response => {
+            if (response.ok) {
+                alert('Spaceship added successfully!');
+            } else {
+                alert('An error occurred while adding the spaceship.');
+                console.error(response);
+            }
+            }).catch(error => {
+            alert('An error occurred while adding the spaceship.');
+            console.error(error);
+            });
+            setTimeout(() => {
+                fetchCargo(username, password);
+            }, 1000);
+        });
+
+        form1.addEventListener('input', () => {
+            submitBtn.disabled = !form1.checkValidity();
+            if (submitBtn.disabled) {
+            submitBtn.style.backgroundColor = 'grey';
+            } else {
+            submitBtn.style.backgroundColor = '#04AA6D';
+            }
+        });
+
+        const table2 = document.getElementById("cargo-table");
+        const form2 = document.getElementById("update-form");
+
+        form2.addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const checkboxes2 = table2.querySelectorAll("input[type=checkbox]");
+            const rows2 = table2.querySelectorAll("tr");
+
+            const form2Data = new FormData(event.target);
+            const newShipName = form2Data.get("shipname-update");
+            const newWeight = form2Data.get("cargoweight-update");
+            const newArrival = form2Data.get("arrival-update");
+            const newDeparture = form2Data.get("departuredate-update");
+            const newCargoType = form2Data.get("cargotype-update");
+
+            for (let i = 0; i < checkboxes2.length; i++) {
+                if (checkboxes2[i].checked) {
+                const row = rows2[i];
+                const oldShipName = row.querySelector(".spaceshipname").textContent;
+                const oldWeight = row.querySelector(".weight").textContent;
+                const oldArrival = row.querySelector(".arrival").textContent;
+                const oldDeparture = row.querySelector(".departure").textContent;
+                const oldCargoType = row.querySelector(".cargotype").textContent;
+
+                const data = {
+                    old_name: oldShipName,
+                    old_weight: oldWeight,
+                    old_cargotype: oldCargoType,
+                    old_arrival: oldArrival,
+                    old_departure: oldDeparture,
+                    new_name: newShipName,
+                    new_weight: newWeight,
+                    new_cargotype: newCargoType,
+                    new_arrival: newArrival,
+                    new_departure: newDeparture,
+                    username: username,
+                    password: password
+                };
+
+                for (const key in data) {
+                    if (data[key] === '') {
+                        delete data[key];
+                    }
+                }
+                
+                setTimeout(() => {
+                    fetch("http://localhost:5000/cargo", {
+                    method: "PUT",
+                    body: JSON.stringify(data),
+                    headers: {
+                    "Content-Type": "application/json",
+                    },
+                })
+                    .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.json();
+                    })
+                    .then((data) => {
+                    console.log(data);
+                    })
+                    .catch((error) => {
+                    console.error("Error:", error);
+                    });
+                }, i*100);
+
+                }
+            }
+            setTimeout(() => {
+                fetchCargo(username, password);
+            }, 1000);
+        });
+
+        const deleteButton = document.querySelector("#delete-button");
+        deleteButton.addEventListener("click", function(event) {
+            event.preventDefault();
+
+            const checkboxes5 = table2.querySelectorAll("input[type=checkbox]");
+            const rows5 = table2.querySelectorAll("tr");
+
+            for (let i = 0; i < checkboxes5.length; i++) {
+                if (checkboxes5[i].checked) {
+                    const row = rows5[i];
+                    const ShipNameToDelete = row.querySelector(".spaceshipname").textContent;
+                    const WeightToDelete = row.querySelector(".weight").textContent;
+                    const ArrivalToDelete = row.querySelector(".arrival").textContent;
+                    const DepartureToDelete = row.querySelector(".departure").textContent;
+                    const CargoTypeToDelete = row.querySelector(".cargotype").textContent;
+
+                    const data = {
+                        name: ShipNameToDelete,
+                        weight: WeightToDelete,
+                        cargotype: CargoTypeToDelete,
+                        arrival: ArrivalToDelete,
+                        departure: DepartureToDelete,
+                        username: username,
+                        password: password
+                    };
+                    
+                    setTimeout(() => {
+                    fetch("http://localhost:5000/cargo", {
+                        method: "DELETE",
+                        body: JSON.stringify(data),
+                        headers: {
+                        "Content-Type": "application/json",
+                        },
+                    })
+                    .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.json();
+                    })
+                    .then((data) => {
+                    console.log(data);
+                    })
+                    .catch((error) => {
+                    console.error("Error:", error);
+                    });
+                    }, i*100);
+                }
+            }
+            setTimeout(() => {
+                fetchCargo(username, password);
+            }, 1000);
+        });
+    };
+</script>
+</html>

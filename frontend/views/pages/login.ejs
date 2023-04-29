@@ -1,0 +1,48 @@
+<%- include('../template/head')-%>
+
+<body class="text-center">
+    <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+        <%- include('../template/nav')-%>
+        <main role="main" class="inner cover">
+            <h1 class="cover-heading">Login</h1>
+            <div id="add-section" class="container">
+                <form id="login-form">
+                    <label for="username">First Name:</label>
+                    <input type="text" id="username" name="username" placeholder="Type username here..." required ><br><br>
+                    <label for="password">Last Name:</label>
+                    <input type="password" id="password" name="password" placeholder="Type password here..." required><br><br>
+                    <input type="submit" id="submit-btn" value="Login">
+                </form>                  
+            </div>
+        </main>
+        <%- include('../template/footer')-%>
+    </div>
+</body>
+<script>
+    window.onload = function() {
+        document.getElementById("login-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            let URL = "http://localhost:5000/captain?username=" + username + "&password=" + password;
+            console.log(URL)
+            fetch(URL, {
+                method: "GET",
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Store a cookie with the username and password
+                    document.cookie = `username=${username};`;
+                    document.cookie = `password=${password};`;
+                    window.location.href = "http://localhost:3000/cargo";
+                } else {
+                    throw new Error("Login failed");
+                }
+            })
+            .catch(error => {
+                alert(error.message);
+            });
+        });
+    };
+</script>
+</html>

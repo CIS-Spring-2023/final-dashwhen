@@ -1,0 +1,335 @@
+<%- include('../template/head')-%>
+<body class="text-center">
+    <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+        <%- include('../template/nav')-%>
+        <main role="main" class="inner cover">
+            <h1 class="cover-heading">Ships List</h1>
+            <div id="table-section">
+                <table class="table w3-text-white">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Ship Name</th>
+                            <th>Maximum Weight</th>
+                            <th>Captain</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ships-table">
+                    </tbody>
+                </table>
+            </div>
+            <div id="select-section">
+                <form id="select-form">
+                    <label for="select">Select an action:</label>
+                    <select id="select" name="select">
+                        <option value="add">Add</option>
+                        <option value="update">Update</option>
+                        <option value="delete">Delete</option>
+                    </select>
+                </form>
+            </div>
+            <div id="add-section" class="container" style="display: none;">
+                <form id="add-form">
+                    <label for="shipname">Spaceship Name:</label>
+                    <input type="text" id="shipname" name="shipname" placeholder="Type ship name here..." required><br><br>
+                    <label for="maximumWeight">Maximum Weight:</label>
+                    <input type="text" id="maximumWeight" name="maximumWeight" placeholder="Type maximum weight here..." required><br><br>
+                    <label for="rank">Captain Rank:</label>
+                    <input type="text" id="rank" name="rank" placeholder="Type captain's rank here..."><br><br>
+                    <label for="firstname">Captain First Name:</label>
+                    <input type="text" id="firstname" name="firstname" placeholder="Type captain's first name here..."><br><br>
+                    <label for="lastname">Captain Last Name:</label>
+                    <input type="text" id="lastname" name="lastname" placeholder="Type captain's last name here..."><br><br>
+                    <label for="homeplanet">Captain Home Planet:</label>
+                    <input type="text" id="homeplanet" name="homeplanet" placeholder="Type captain's home planet here..."><br><br>
+                    <input type="submit" id="submit-btn" value="Add New Entry">
+                </form>                  
+            </div>
+            <div id="update-section" class="container" style="display: none;">
+                <form id="update-form">
+                    <label for="shipname-update">New Spaceship Name:</label>
+                    <input type="text" id="shipname-update" name="shipname-update" placeholder="Leave ship name unchanged..."><br><br>
+                    <label for="maximumWeight-update">New Maximum Weight:</label>
+                    <input type="text" id="maximumWeight-update" name="maximumWeight-update" placeholder="Leave maximum weight unchanged..."><br><br>
+                    <label for="rank-update">Substitute Captain Rank:</label>
+                    <input type="text" id="rank-update" name="rank-update" placeholder="Type substitute captain's rank here..."><br><br>
+                    <label for="firstname-update">Substitute Captain First Name:</label>
+                    <input type="text" id="firstname-update" name="firstname-update" placeholder="Type substitute captain's first name here..."><br><br>
+                    <label for="lastname-update">Substitute Captain Last Name:</label>
+                    <input type="text" id="lastname-update" name="lastname-update" placeholder="Type substitute captain's last name here..."><br><br>
+                    <label for="homeplanet-update">Substitute Captain Home Planet:</label>
+                    <input type="text" id="homeplanet-update" name="homeplanet-update" placeholder="Type substitute captain's home planet here..."><br><br>
+                    <input type="submit" id="submit-btn" value="Update Selected Entries">
+                </form>
+            </div>
+            
+            <div id="delete-section" class="container" style="display: none;">
+                <button id="delete-button">Delete Selected Entries</button>
+            </div>
+        </main>
+        <%- include('../template/footer')-%>
+    </div>
+</body>
+<script>
+    function handleSelectChange() {
+        const select = document.querySelector('select');
+        const addSection = document.querySelector('#add-section');
+        const updateSection = document.querySelector('#update-section');
+        const deleteSection = document.querySelector('#delete-section');
+        const checkboxes = document.querySelectorAll('.hidden');
+        
+        if (select.value === 'add') {
+            addSection.style.display = 'block';
+            updateSection.style.display = 'none';
+            deleteSection.style.display = 'none';
+
+            // Hide all checkboxes
+            checkboxes.forEach(function(checkbox) {
+            checkbox.style.display = 'none';
+            });
+        } else if (select.value === 'update') {
+            addSection.style.display = 'none';
+            updateSection.style.display = 'block';
+            deleteSection.style.display = 'none';
+
+            // Show all checkboxes
+            checkboxes.forEach(function(checkbox) {
+            checkbox.style.display = 'block';
+            });
+        } else if (select.value === 'delete') {
+            addSection.style.display = 'none';
+            updateSection.style.display = 'none';
+            deleteSection.style.display = 'block';
+
+            // Show all checkboxes
+            checkboxes.forEach(function(checkbox) {
+            checkbox.style.display = 'block';
+            });
+        }
+    }
+    
+    function fetchSpaceships(username, password) {
+        // Reset the captain table before appending to it
+        const spaceshipsTable = document.getElementById('ships-table');
+        spaceshipsTable.innerHTML = '';
+
+        // Make a GET request to the server
+        fetch(`http://localhost:5000/spaceship?username=${username}&password=${password}`)
+            .then(response => response.json())
+            .then(data => {
+                // Extract the captain objects from the response
+                const spaceships = Object.values(data);
+
+                // Dynamically generate the table rows
+                for (const spaceship of spaceships) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><input type="checkbox" class="hidden" id="checkbox${spaceship.id}" style="display:none;width:17px;height:17px;"></td>
+                        <td class="shipname">${spaceship.name}</td>
+                        <td class="maxweight">${spaceship.maxweight}</td>
+                        <td class="captain">${spaceship.captain}</td>
+                    `;
+                    spaceshipsTable.appendChild(row);
+                }
+                handleSelectChange();
+            })
+            .catch(error => console.error(error));
+    }
+
+    window.onload = function() {
+
+        const cookies = document.cookie.split("; ");
+        const usernameCookie = cookies.find(cookie => cookie.startsWith("username="));
+        const passwordCookie = cookies.find(cookie => cookie.startsWith("password="));
+        const username = usernameCookie ? usernameCookie.split("=")[1] : null;
+        const password = passwordCookie ? passwordCookie.split("=")[1] : null;
+
+        if (!username || !password) {
+            window.location.href = "http://localhost:3000/login";
+        }
+
+        const select = document.getElementById('select');
+        const addSection = document.getElementById('add-section');
+        const updateSection = document.getElementById('update-section');
+        const deleteSection = document.getElementById('delete-section');
+
+        fetchSpaceships(username, password);
+
+        select.addEventListener('change', handleSelectChange);
+
+        select.value = '';
+
+        const form1 = document.getElementById('add-form');
+        const submitBtn = document.getElementById('submit-btn');
+
+        form1.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const form1Data = {
+            name: form1.shipname.value,
+            maxweight: form1.maximumWeight.value,
+            firstname: form1.firstname.value,
+            lastname: form1.lastname.value,
+            captain_rank: form1.rank.value,
+            homeplanet: form1.homeplanet.value,
+            username: username,
+            password: password
+            };
+
+            for (const key in form1Data) {
+            if (form1Data[key] === '') {
+                delete form1Data[key];
+            }
+            }
+
+            fetch('http://localhost:5000/spaceship', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(form1Data)
+            }).then(response => {
+            if (response.ok) {
+                alert('Spaceship added successfully!');
+            } else {
+                alert('An error occurred while adding the spaceship.');
+                console.error(response);
+            }
+            }).catch(error => {
+            alert('An error occurred while adding the spaceship.');
+            console.error(error);
+            });
+            setTimeout(() => {
+                fetchSpaceships(username, password);
+            }, 1000);
+        });
+
+        form1.addEventListener('input', () => {
+            submitBtn.disabled = !form1.checkValidity();
+            if (submitBtn.disabled) {
+            submitBtn.style.backgroundColor = 'grey';
+            } else {
+            submitBtn.style.backgroundColor = '#04AA6D';
+            }
+        });
+
+        const table2 = document.getElementById("ships-table");
+        const form2 = document.getElementById("update-form");
+
+        form2.addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const checkboxes2 = table2.querySelectorAll("input[type=checkbox]");
+            const rows2 = table2.querySelectorAll("tr");
+
+            const form2Data = new FormData(event.target);
+            const newShipName = form2Data.get("shipname-update");
+            const newMaximumWeight = form2Data.get("maximumWeight-update");
+            const newFirstName = form2Data.get("firstname-update");
+            const newLastName = form2Data.get("lastname-update");
+            const newRank = form2Data.get("rank-update");
+            const newHomePlanet = form2Data.get("homeplanet-update");
+
+            for (let i = 0; i < checkboxes2.length; i++) {
+                if (checkboxes2[i].checked) {
+                const row = rows2[i];
+                const oldShipName = row.querySelector(".shipname").textContent;
+                const oldMaximumWeight = row.querySelector(".maxweight").textContent;
+
+                const data = {
+                    old_name: oldShipName,
+                    old_maxweight: oldMaximumWeight,
+                    new_name: newShipName,
+                    new_maxweight: newMaximumWeight,
+                    new_firstname: newFirstName,
+                    new_lastname: newLastName,
+                    new_captain_rank: newRank,
+                    new_homeplanet: newHomePlanet,
+                    username: username,
+                    password: password
+                };
+
+                for (const key in data) {
+                    if (data[key] === '') {
+                        delete data[key];
+                    }
+                }
+                
+                setTimeout(() => {
+                    fetch("http://localhost:5000/spaceship", {
+                    method: "PUT",
+                    body: JSON.stringify(data),
+                    headers: {
+                    "Content-Type": "application/json",
+                    },
+                })
+                    .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.json();
+                    })
+                    .then((data) => {
+                    console.log(data);
+                    })
+                    .catch((error) => {
+                    console.error("Error:", error);
+                    });
+                }, i*100);
+
+                }
+            }
+            setTimeout(() => {
+                fetchSpaceships(username, password);
+            }, 1000);
+        });
+
+        const deleteButton = document.querySelector("#delete-button");
+        deleteButton.addEventListener("click", function(event) {
+            event.preventDefault();
+
+            const checkboxes5 = table2.querySelectorAll("input[type=checkbox]");
+            const rows5 = table2.querySelectorAll("tr");
+
+            for (let i = 0; i < checkboxes5.length; i++) {
+                if (checkboxes5[i].checked) {
+                    const row = rows5[i];
+                    const shipNameToDelete = row.querySelector(".shipname").textContent;
+                    const maxWeightToDelete = row.querySelector(".maxweight").textContent;
+
+                    const data = {
+                        name: shipNameToDelete,
+                        maxweight: maxWeightToDelete,
+                        username: username,
+                        password: password
+                    };
+                    
+                    setTimeout(() => {
+                    fetch("http://localhost:5000/spaceship", {
+                        method: "DELETE",
+                        body: JSON.stringify(data),
+                        headers: {
+                        "Content-Type": "application/json",
+                        },
+                    })
+                    .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.json();
+                    })
+                    .then((data) => {
+                    console.log(data);
+                    })
+                    .catch((error) => {
+                    console.error("Error:", error);
+                    });
+                    }, i*100);
+                }
+            }
+            setTimeout(() => {
+                fetchSpaceships(username, password);
+            }, 1000);
+        });
+    };
+</script>
+</html>
