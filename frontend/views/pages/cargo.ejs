@@ -14,8 +14,8 @@
                         <tr>
                             <th></th>
                             <th>Cargo Type</th>
-                            <th>Arrival</th>
                             <th>Departure</th>
+                            <th>Arrival</th>
                             <th>Weight</th>
                             <th>Ship Name</th>
                         </tr>
@@ -200,13 +200,13 @@
             body: JSON.stringify(form1Data)
             }).then(response => {
             if (response.ok) {
-                alert('Spaceship added successfully!');
+                alert('Cargo added successfully!');
             } else {
-                alert('An error occurred while adding the spaceship.');
+                alert('An error occurred while adding the cargo.');
                 console.error(response);
             }
             }).catch(error => {
-            alert('An error occurred while adding the spaceship.');
+            alert('An error occurred while adding the cargo.');
             console.error(error);
             });
             setTimeout(() => {

@@ -65,11 +65,11 @@ def create_cargo():
     cursor.fetchall()
     query = "SELECT SUM(weight) FROM cargo WHERE shipid = %s"
     cursor.execute(query, values)
-    cargo_total_weight = float(cursor.fetchone()[0])
+    cargo_total_weight = cursor.fetchone()[0]
     if(cargo_total_weight is None):
         cargo_total_weight = 0
     cursor.fetchall()
-    if((float(cargo['weight']) + cargo_total_weight) > spaceship_max_weight):
+    if((float(cargo['weight']) + float(cargo_total_weight)) > spaceship_max_weight):
         return jsonify({'message': 'Cargo weight exceeds spaceship limits'}), 404
     query = queries.cargoInsert
     values = (cargo['weight'], cargo['cargotype'], cargo['departure'], cargo['arrival'], cargo['shipid'])
